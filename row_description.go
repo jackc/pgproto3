@@ -37,15 +37,14 @@ func (dst *RowDescription) Decode(src []byte) error {
 	}
 	fieldCount := int(binary.BigEndian.Uint16(buf.Next(2)))
 
-	dst.Fields = dst.Fields[0:0]
+	dst.Fields = make([]FieldDescription, fieldCount)
 
 	for i := 0; i < fieldCount; i++ {
-		var fd FieldDescription
 		bName, err := buf.ReadBytes(0)
 		if err != nil {
 			return err
 		}
-		fd.Name = string(bName[:len(bName)-1])
+		dst.Fields[i].Name = string(bName[:len(bName)-1])
 
 		// Since buf.Next() doesn't return an error if we hit the end of the buffer
 		// check Len ahead of time
@@ -53,14 +52,12 @@ func (dst *RowDescription) Decode(src []byte) error {
 			return &invalidMessageFormatErr{messageType: "RowDescription"}
 		}
 
-		fd.TableOID = binary.BigEndian.Uint32(buf.Next(4))
-		fd.TableAttributeNumber = binary.BigEndian.Uint16(buf.Next(2))
-		fd.DataTypeOID = binary.BigEndian.Uint32(buf.Next(4))
-		fd.DataTypeSize = int16(binary.BigEndian.Uint16(buf.Next(2)))
-		fd.TypeModifier = int32(binary.BigEndian.Uint32(buf.Next(4)))
-		fd.Format = int16(binary.BigEndian.Uint16(buf.Next(2)))
-
-		dst.Fields = append(dst.Fields, fd)
+		dst.Fields[i].TableOID = binary.BigEndian.Uint32(buf.Next(4))
+		dst.Fields[i].TableAttributeNumber = binary.BigEndian.Uint16(buf.Next(2))
+		dst.Fields[i].DataTypeOID = binary.BigEndian.Uint32(buf.Next(4))
+		dst.Fields[i].DataTypeSize = int16(binary.BigEndian.Uint16(buf.Next(2)))
+		dst.Fields[i].TypeModifier = int32(binary.BigEndian.Uint32(buf.Next(4)))
+		dst.Fields[i].Format = int16(binary.BigEndian.Uint16(buf.Next(2)))
 	}
 
 	return nil
