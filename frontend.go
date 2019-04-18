@@ -11,31 +11,6 @@ type Frontend struct {
 	cr ChunkReader
 	w  io.Writer
 
-	// Backend message flyweights
-	authentication       Authentication
-	backendKeyData       BackendKeyData
-	bindComplete         BindComplete
-	closeComplete        CloseComplete
-	commandComplete      CommandComplete
-	copyBothResponse     CopyBothResponse
-	copyData             CopyData
-	copyInResponse       CopyInResponse
-	copyOutResponse      CopyOutResponse
-	copyDone             CopyDone
-	copyFail             CopyFail
-	dataRow              DataRow
-	emptyQueryResponse   EmptyQueryResponse
-	errorResponse        ErrorResponse
-	functionCallResponse FunctionCallResponse
-	noData               NoData
-	noticeResponse       NoticeResponse
-	notificationResponse NotificationResponse
-	parameterDescription ParameterDescription
-	parameterStatus      ParameterStatus
-	parseComplete        ParseComplete
-	readyForQuery        ReadyForQuery
-	rowDescription       RowDescription
-
 	bodyLen    int
 	msgType    byte
 	partialMsg bool
@@ -65,51 +40,51 @@ func (b *Frontend) Receive() (BackendMessage, error) {
 	var msg BackendMessage
 	switch b.msgType {
 	case '1':
-		msg = &b.parseComplete
+		msg = &ParseComplete{}
 	case '2':
-		msg = &b.bindComplete
+		msg = &BindComplete{}
 	case '3':
-		msg = &b.closeComplete
+		msg = &CloseComplete{}
 	case 'A':
-		msg = &b.notificationResponse
+		msg = &NotificationResponse{}
 	case 'c':
-		msg = &b.copyDone
+		msg = &CopyDone{}
 	case 'C':
-		msg = &b.commandComplete
+		msg = &CommandComplete{}
 	case 'd':
-		msg = &b.copyData
+		msg = &CopyData{}
 	case 'D':
-		msg = &b.dataRow
+		msg = &DataRow{}
 	case 'E':
-		msg = &b.errorResponse
+		msg = &ErrorResponse{}
 	case 'f':
-		msg = &b.copyFail
+		msg = &CopyFail{}
 	case 'G':
-		msg = &b.copyInResponse
+		msg = &CopyInResponse{}
 	case 'H':
-		msg = &b.copyOutResponse
+		msg = &CopyOutResponse{}
 	case 'I':
-		msg = &b.emptyQueryResponse
+		msg = &EmptyQueryResponse{}
 	case 'K':
-		msg = &b.backendKeyData
+		msg = &BackendKeyData{}
 	case 'n':
-		msg = &b.noData
+		msg = &NoData{}
 	case 'N':
-		msg = &b.noticeResponse
+		msg = &NoticeResponse{}
 	case 'R':
-		msg = &b.authentication
+		msg = &Authentication{}
 	case 'S':
-		msg = &b.parameterStatus
+		msg = &ParameterStatus{}
 	case 't':
-		msg = &b.parameterDescription
+		msg = &ParameterDescription{}
 	case 'T':
-		msg = &b.rowDescription
+		msg = &RowDescription{}
 	case 'V':
-		msg = &b.functionCallResponse
+		msg = &FunctionCallResponse{}
 	case 'W':
-		msg = &b.copyBothResponse
+		msg = &CopyBothResponse{}
 	case 'Z':
-		msg = &b.readyForQuery
+		msg = &ReadyForQuery{}
 	default:
 		return nil, errors.Errorf("unknown message type: %c", b.msgType)
 	}
