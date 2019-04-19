@@ -11,6 +11,12 @@ type Frontend struct {
 	cr ChunkReader
 	w  io.Writer
 
+	fieldDescriptionBlock []FieldDescription
+	rowDescriptionBlock   []RowDescription
+
+	byteSliceBlock [][]byte
+	dataRowBlock   []DataRow
+
 	bodyLen    int
 	msgType    byte
 	partialMsg bool
@@ -37,6 +43,13 @@ func (b *Frontend) Receive() (BackendMessage, error) {
 		b.partialMsg = true
 	}
 
+	msgBody, err := b.cr.Next(b.bodyLen)
+	if err != nil {
+		return nil, err
+	}
+
+	b.partialMsg = false
+
 	var msg BackendMessage
 	switch b.msgType {
 	case '1':
@@ -54,7 +67,28 @@ func (b *Frontend) Receive() (BackendMessage, error) {
 	case 'd':
 		msg = &CopyData{}
 	case 'D':
-		msg = &DataRow{}
+		if len(msgBody) < 2 {
+			return nil, &invalidMessageFormatErr{messageType: "DataRow"}
+		}
+		fieldCount := int(binary.BigEndian.Uint16(msgBody))
+
+		if len(b.byteSliceBlock) < fieldCount {
+			b.byteSliceBlock = make([][]byte, fieldCount*128)
+		}
+
+		values := b.byteSliceBlock[:fieldCount]
+		b.byteSliceBlock = b.byteSliceBlock[fieldCount:]
+
+		if len(b.dataRowBlock) == 0 {
+			b.dataRowBlock = make([]DataRow, 128)
+		}
+
+		dataRow := &b.dataRowBlock[0]
+		b.dataRowBlock = b.dataRowBlock[1:]
+
+		dataRow.Values = values
+
+		msg = dataRow
 	case 'E':
 		msg = &ErrorResponse{}
 	case 'f':
@@ -78,7 +112,27 @@ func (b *Frontend) Receive() (BackendMessage, error) {
 	case 't':
 		msg = &ParameterDescription{}
 	case 'T':
-		msg = &RowDescription{}
+		if len(msgBody) < 2 {
+			return nil, &invalidMessageFormatErr{messageType: "RowDescription"}
+		}
+		fieldCount := int(binary.BigEndian.Uint16(msgBody))
+
+		if len(b.fieldDescriptionBlock) < fieldCount {
+			b.fieldDescriptionBlock = make([]FieldDescription, fieldCount*32)
+		}
+
+		fields := b.fieldDescriptionBlock[:fieldCount]
+		b.fieldDescriptionBlock = b.fieldDescriptionBlock[fieldCount:]
+
+		if len(b.rowDescriptionBlock) == 0 {
+			b.rowDescriptionBlock = make([]RowDescription, 32)
+		}
+
+		rowDescription := &b.rowDescriptionBlock[0]
+		b.rowDescriptionBlock = b.rowDescriptionBlock[1:]
+
+		rowDescription.Fields = fields
+		msg = rowDescription
 	case 'V':
 		msg = &FunctionCallResponse{}
 	case 'W':
@@ -88,13 +142,6 @@ func (b *Frontend) Receive() (BackendMessage, error) {
 	default:
 		return nil, errors.Errorf("unknown message type: %c", b.msgType)
 	}
-
-	msgBody, err := b.cr.Next(b.bodyLen)
-	if err != nil {
-		return nil, err
-	}
-
-	b.partialMsg = false
 
 	err = msg.Decode(msgBody)
 	return msg, err

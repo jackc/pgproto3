@@ -37,7 +37,9 @@ func (dst *RowDescription) Decode(src []byte) error {
 	}
 	fieldCount := int(binary.BigEndian.Uint16(buf.Next(2)))
 
-	dst.Fields = make([]FieldDescription, fieldCount)
+	if len(dst.Fields) != fieldCount {
+		dst.Fields = make([]FieldDescription, fieldCount)
+	}
 
 	for i := 0; i < fieldCount; i++ {
 		bName, err := buf.ReadBytes(0)

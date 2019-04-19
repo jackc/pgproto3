@@ -22,17 +22,8 @@ func (dst *DataRow) Decode(src []byte) error {
 	fieldCount := int(binary.BigEndian.Uint16(src[rp:]))
 	rp += 2
 
-	// If the capacity of the values slice is too small OR substantially too
-	// large reallocate. This is too avoid one row with many columns from
-	// permanently allocating memory.
-	if cap(dst.Values) < fieldCount || cap(dst.Values)-fieldCount > 32 {
-		newCap := 32
-		if newCap < fieldCount {
-			newCap = fieldCount
-		}
-		dst.Values = make([][]byte, fieldCount, newCap)
-	} else {
-		dst.Values = dst.Values[:fieldCount]
+	if len(dst.Values) != fieldCount {
+		dst.Values = make([][]byte, fieldCount)
 	}
 
 	for i := 0; i < fieldCount; i++ {
