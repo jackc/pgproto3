@@ -3,6 +3,7 @@ package pgproto3
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/binary"
 
 	"github.com/jackc/pgio"
 )
@@ -17,12 +18,11 @@ func (*Query) Frontend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *Query) Decode(src []byte) error {
-	i := bytes.IndexByte(src, 0)
-	if i != len(src)-1 {
+	if src[0] != 'Q' || binary.BigEndian.Uint32(src[1:5]) != uint32(len(src)-1) {
 		return &invalidMessageFormatErr{messageType: "Query"}
 	}
 
-	dst.String = string(src[:i])
+	dst.String = string(src[5 : len(src)-1])
 
 	return nil
 }
