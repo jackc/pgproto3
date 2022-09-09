@@ -489,10 +489,10 @@ func TestJSONUnmarshalQuery(t *testing.T) {
 }
 
 func TestJSONUnmarshalSASLInitialResponse(t *testing.T) {
-	data := []byte(`{"Type":"SASLInitialResponse", "AuthMechanism":"SCRAM-SHA-256", "Data": "6D"}`)
+	data := []byte(`{"Type":"SASLInitialResponse", "AuthMechanism":"SCRAM-SHA-256", "Data": "abc"}`)
 	want := SASLInitialResponse{
 		AuthMechanism: "SCRAM-SHA-256",
-		Data:          []byte{109},
+		Data:          []byte("abc"),
 	}
 
 	var got SASLInitialResponse
@@ -505,8 +505,10 @@ func TestJSONUnmarshalSASLInitialResponse(t *testing.T) {
 }
 
 func TestJSONUnmarshalSASLResponse(t *testing.T) {
-	data := []byte(`{"Type":"SASLResponse","Message":"abc"}`)
-	want := SASLResponse{}
+	data := []byte(`{"Type":"SASLResponse","Data":"abc"}`)
+	want := SASLResponse{
+		Data: []byte("abc"),
+	}
 
 	var got SASLResponse
 	if err := json.Unmarshal(data, &got); err != nil {
