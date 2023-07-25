@@ -18,6 +18,7 @@ func (*FunctionCall) Frontend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *FunctionCall) Decode(src []byte) error {
+	print("FunctionCall Decode")
 	*dst = FunctionCall{}
 	rp := 0
 	// Specifies the object ID of the function to call.
@@ -71,6 +72,7 @@ func (dst *FunctionCall) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *FunctionCall) Encode(dst []byte) []byte {
+	println("FunctionCall.Encode")
 	dst = append(dst, 'F')
 	sp := len(dst)
 	dst = pgio.AppendUint32(dst, 0) // Unknown length, set it at the end

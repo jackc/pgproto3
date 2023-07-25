@@ -14,7 +14,7 @@ type PgFortuneBackend struct {
 }
 
 func NewPgFortuneBackend(conn net.Conn, responder func() ([]byte, error)) *PgFortuneBackend {
-	backend := pgproto3.NewBackend(pgproto3.NewChunkReader(conn), conn)
+	backend := pgproto3.NewBackend(pgproto3.NewChunkReader(conn), conn, conn)
 
 	connHandler := &PgFortuneBackend{
 		backend:   backend,
@@ -34,7 +34,7 @@ func (p *PgFortuneBackend) Run() error {
 	}
 
 	for {
-		msg, err := p.backend.Receive()
+		msg, err := p.backend.Receive(nil)
 		if err != nil {
 			return fmt.Errorf("error receiving message: %w", err)
 		}

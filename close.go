@@ -19,6 +19,7 @@ func (*Close) Frontend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *Close) Decode(src []byte) error {
+	println("Close.Decode")
 	if len(src) < 2 {
 		return &invalidMessageFormatErr{messageType: "Close"}
 	}
@@ -38,6 +39,7 @@ func (dst *Close) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *Close) Encode(dst []byte) []byte {
+	println("Close.Encode")
 	dst = append(dst, 'C')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)

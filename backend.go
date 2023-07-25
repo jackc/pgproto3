@@ -7,11 +7,19 @@ import (
 	"io"
 )
 
+type ByteReader struct {
+	data []byte
+	pos  int
+}
+
+func NewByteReader(data []byte) *ByteReader {
+	return &ByteReader{data: data, pos: 0}
+}
 // Backend acts as a server for the PostgreSQL wire protocol version 3.
 type Backend struct {
 	cr ChunkReader
 	w  io.Writer
-
+	r io.Reader
 	// Frontend message flyweights
 	bind           Bind
 	cancelRequest  CancelRequest
@@ -43,8 +51,8 @@ const (
 )
 
 // NewBackend creates a new Backend.
-func NewBackend(cr ChunkReader, w io.Writer) *Backend {
-	return &Backend{cr: cr, w: w}
+func NewBackend(cr ChunkReader, w io.Writer, r io.Reader) *Backend {
+	return &Backend{cr: cr, w: w, r: r}
 }
 
 // Send sends a message to the frontend.
@@ -58,6 +66,7 @@ func (b *Backend) Send(msg BackendMessage) error {
 // will return either a StartupMessage, SSLRequest, GSSEncRequest, or CancelRequest.
 func (b *Backend) ReceiveStartupMessage() (FrontendMessage, error) {
 	buf, err := b.cr.Next(4)
+	
 	if err != nil {
 		return nil, err
 	}
@@ -104,22 +113,102 @@ func (b *Backend) ReceiveStartupMessage() (FrontendMessage, error) {
 	}
 }
 
-// Receive receives a message from the frontend. The returned message is only valid until the next call to Receive.
-func (b *Backend) Receive() (FrontendMessage, error) {
-	if !b.partialMsg {
-		header, err := b.cr.Next(5)
+
+func (b *Backend) ReceiveStartupMessage2(buf []byte) (FrontendMessage, error) {
+	br:=NewByteReader(buf)
+	buf,err := br.Next(4)
+	println("buf:",buf)
+	if err != nil {
+		return nil, err
+	}
+	msgSize := int(binary.BigEndian.Uint32(buf) - 4)
+
+	if msgSize < minStartupPacketLen || msgSize > maxStartupPacketLen {
+		return nil, fmt.Errorf("invalid length of startup packet: %d", msgSize)
+	}
+
+	// buf, err := b.cr.Next(msgSize)
+	
+	buf,err = br.Next(msgSize)
+	if err != nil {
+		return nil, translateEOFtoErrUnexpectedEOF(err)
+	}
+
+	code := binary.BigEndian.Uint32(buf)
+
+	switch code {
+	case ProtocolVersionNumber:
+		err = b.startupMessage.Decode(buf)
 		if err != nil {
+			return nil, err
+		}
+		return &b.startupMessage, nil
+	case sslRequestNumber:
+		err = b.sslRequest.Decode(buf)
+		if err != nil {
+			return nil, err
+		}
+		return &b.sslRequest, nil
+	case cancelRequestCode:
+		err = b.cancelRequest.Decode(buf)
+		if err != nil {
+			return nil, err
+		}
+		return &b.cancelRequest, nil
+	case gssEncReqNumber:
+		err = b.gssEncRequest.Decode(buf)
+		if err != nil {
+			return nil, err
+		}
+		return &b.gssEncRequest, nil
+	default:
+		return nil, fmt.Errorf("unknown startup message code: %d", code)
+	}
+}
+
+
+func (br *ByteReader) Next(n int) ([]byte, error) {
+	if n < 0 {
+		return nil, errors.New("n must be greater than 0")
+	}
+	// if 0 return nil, nil
+	if n==0 {
+		return nil, nil
+	}
+
+	if br.pos+n > len(br.data) {
+		return nil, errors.New("not enough data left in the buffer")
+	}
+
+	start := br.pos
+	br.pos += n
+
+	return br.data[start:br.pos], nil
+}
+
+// receive backend message
+// Receive receives a message from the frontend. The returned message is only valid until the next call to Receive.
+func (b *Backend) Receive(buf []byte) (FrontendMessage, error) {
+	print("backend receive\n")
+	br:=NewByteReader(buf)
+	if !b.partialMsg {
+		header, err := br.Next(5) // here it causing unexpected EOF , this was removed for 
+		if err != nil {
+			println("err: unexpected eof", err)
 			return nil, translateEOFtoErrUnexpectedEOF(err)
 		}
-
-		b.msgType = header[0]
+		println("header:",header)
+		b.msgType = header[0] 
+		// remaining:=header[1:]
+		// println("remaining bytes after extracting headers :",remaining, "len:",len(remaining))
 		b.bodyLen = int(binary.BigEndian.Uint32(header[1:])) - 4
-		b.partialMsg = true
+		b.partialMsg = false
 		if b.bodyLen < 0 {
 			return nil, errors.New("invalid message with negative body length received")
 		}
 	}
 
+	fmt.Println("msgType", b.msgType)
 	var msg FrontendMessage
 	switch b.msgType {
 	case 'B':
@@ -168,7 +257,8 @@ func (b *Backend) Receive() (FrontendMessage, error) {
 		return nil, fmt.Errorf("unknown message type: %c", b.msgType)
 	}
 
-	msgBody, err := b.cr.Next(b.bodyLen)
+	msgBody, err := br.Next(b.bodyLen)
+	println("msgBody", msgBody)
 	if err != nil {
 		return nil, translateEOFtoErrUnexpectedEOF(err)
 	}
@@ -176,6 +266,8 @@ func (b *Backend) Receive() (FrontendMessage, error) {
 	b.partialMsg = false
 
 	err = msg.Decode(msgBody)
+	dest:= msg.Encode(msgBody)
+	println("dest:",dest)
 	return msg, err
 }
 
@@ -209,5 +301,13 @@ func (b *Backend) SetAuthType(authType uint32) error {
 		return fmt.Errorf("authType not recognized: %d", authType)
 	}
 
+	return nil
+}
+
+
+func Next(n int)[]byte{
+	
+	
+	
 	return nil
 }

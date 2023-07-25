@@ -24,6 +24,7 @@ func (*Bind) Frontend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *Bind) Decode(src []byte) error {
+	println("Bind.Decode")
 	*dst = Bind{}
 
 	idx := bytes.IndexByte(src, 0)
@@ -109,6 +110,7 @@ func (dst *Bind) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *Bind) Encode(dst []byte) []byte {
+	println("Bind.Encode")
 	dst = append(dst, 'B')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)

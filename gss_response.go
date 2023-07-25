@@ -13,11 +13,13 @@ type GSSResponse struct {
 func (g *GSSResponse) Frontend() {}
 
 func (g *GSSResponse) Decode(data []byte) error {
+	println("GSSResponse.Decode")
 	g.Data = data
 	return nil
 }
 
 func (g *GSSResponse) Encode(dst []byte) []byte {
+	println("GSSResponse.Encode")
 	dst = append(dst, 'p')
 	dst = pgio.AppendInt32(dst, int32(4+len(g.Data)))
 	dst = append(dst, g.Data...)

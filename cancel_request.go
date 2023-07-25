@@ -19,6 +19,7 @@ type CancelRequest struct {
 func (*CancelRequest) Frontend() {}
 
 func (dst *CancelRequest) Decode(src []byte) error {
+	println("CancelRequest.Decode")
 	if len(src) != 12 {
 		return errors.New("bad cancel request size")
 	}
@@ -37,6 +38,7 @@ func (dst *CancelRequest) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 4 byte message length.
 func (src *CancelRequest) Encode(dst []byte) []byte {
+	println("CancelRequest.Encode")
 	dst = pgio.AppendInt32(dst, 16)
 	dst = pgio.AppendInt32(dst, cancelRequestCode)
 	dst = pgio.AppendUint32(dst, src.ProcessID)

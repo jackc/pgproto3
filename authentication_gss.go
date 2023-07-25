@@ -14,6 +14,7 @@ func (a *AuthenticationGSS) Backend() {}
 func (a *AuthenticationGSS) AuthenticationResponse() {}
 
 func (a *AuthenticationGSS) Decode(src []byte) error {
+	println("AuthenticationGSS.Decode")
 	if len(src) < 4 {
 		return errors.New("authentication message too short")
 	}
@@ -27,6 +28,7 @@ func (a *AuthenticationGSS) Decode(src []byte) error {
 }
 
 func (a *AuthenticationGSS) Encode(dst []byte) []byte {
+	println("AuthenticationGSS.Encode")
 	dst = append(dst, 'R')
 	dst = pgio.AppendInt32(dst, 4)
 	dst = pgio.AppendUint32(dst, AuthTypeGSS)

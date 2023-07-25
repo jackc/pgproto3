@@ -9,9 +9,9 @@ import (
 
 // Frontend acts as a client for the PostgreSQL wire protocol version 3.
 type Frontend struct {
-	cr ChunkReader
+	cr ChunkReader // instead of chunkreader use normal reader
 	w  io.Writer
-
+	r   io.Reader
 	// Backend message flyweights
 	authenticationOk                AuthenticationOk
 	authenticationCleartextPassword AuthenticationCleartextPassword
@@ -51,8 +51,8 @@ type Frontend struct {
 }
 
 // NewFrontend creates a new Frontend.
-func NewFrontend(cr ChunkReader, w io.Writer) *Frontend {
-	return &Frontend{cr: cr, w: w}
+func NewFrontend(cr ChunkReader, w io.Writer, r io.Reader) *Frontend {
+	return &Frontend{cr: cr, w: w,r: r}
 }
 
 // Send sends a message to the backend.
@@ -68,14 +68,16 @@ func translateEOFtoErrUnexpectedEOF(err error) error {
 	return err
 }
 
+// recieves backend message
 // Receive receives a message from the backend. The returned message is only valid until the next call to Receive.
-func (f *Frontend) Receive() (BackendMessage, error) {
+func (f *Frontend) Receive(buf []byte) (BackendMessage, error) {
+	brf:=NewByteReader(buf)
 	if !f.partialMsg {
-		header, err := f.cr.Next(5)
+		header, err := brf.Next(5)
 		if err != nil {
 			return nil, translateEOFtoErrUnexpectedEOF(err)
 		}
-
+		fmt.Println("header ::::: :: : : : : :",header)
 		f.msgType = header[0]
 		f.bodyLen = int(binary.BigEndian.Uint32(header[1:])) - 4
 		f.partialMsg = true
@@ -83,8 +85,10 @@ func (f *Frontend) Receive() (BackendMessage, error) {
 			return nil, errors.New("invalid message with negative body length received")
 		}
 	}
-
-	msgBody, err := f.cr.Next(f.bodyLen)
+	if f.bodyLen == 0 {
+		fmt.Println("bodylen is 0 for msgtype",f.msgType)
+	}
+	msgBody, err := brf.Next(f.bodyLen)
 	if err != nil {
 		return nil, translateEOFtoErrUnexpectedEOF(err)
 	}
@@ -148,6 +152,8 @@ func (f *Frontend) Receive() (BackendMessage, error) {
 	}
 
 	err = msg.Decode(msgBody)
+
+	println("msgtype",f.msgType,"msgbody",msgBody,"msg",msg)
 	return msg, err
 }
 

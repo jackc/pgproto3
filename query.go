@@ -17,6 +17,7 @@ func (*Query) Frontend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *Query) Decode(src []byte) error {
+	println("Query.Decode")
 	i := bytes.IndexByte(src, 0)
 	if i != len(src)-1 {
 		return &invalidMessageFormatErr{messageType: "Query"}
@@ -29,6 +30,7 @@ func (dst *Query) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *Query) Encode(dst []byte) []byte {
+	println("Query.Encode")
 	dst = append(dst, 'Q')
 	dst = pgio.AppendInt32(dst, int32(4+len(src.String)+1))
 

@@ -16,9 +16,9 @@ func TestBackendReceiveInterrupted(t *testing.T) {
 	server := &interruptReader{}
 	server.push([]byte{'Q', 0, 0, 0, 6})
 
-	backend := pgproto3.NewBackend(pgproto3.NewChunkReader(server), nil)
+	backend := pgproto3.NewBackend(pgproto3.NewChunkReader(server), nil,nil)
 
-	msg, err := backend.Receive()
+	msg, err := backend.Receive(nil)
 	if err == nil {
 		t.Fatal("expected err")
 	}
@@ -28,7 +28,7 @@ func TestBackendReceiveInterrupted(t *testing.T) {
 
 	server.push([]byte{'I', 0})
 
-	msg, err = backend.Receive()
+	msg, err = backend.Receive(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,10 +43,10 @@ func TestBackendReceiveUnexpectedEOF(t *testing.T) {
 	server := &interruptReader{}
 	server.push([]byte{'Q', 0, 0, 0, 6})
 
-	backend := pgproto3.NewBackend(pgproto3.NewChunkReader(server), nil)
+	backend := pgproto3.NewBackend(pgproto3.NewChunkReader(server), nil,nil)
 
 	// Receive regular msg
-	msg, err := backend.Receive()
+	msg, err := backend.Receive(nil)
 	assert.Nil(t, msg)
 	assert.Equal(t, io.ErrUnexpectedEOF, err)
 
@@ -77,7 +77,7 @@ func TestStartupMessage(t *testing.T) {
 		server := &interruptReader{}
 		server.push(dst)
 
-		backend := pgproto3.NewBackend(pgproto3.NewChunkReader(server), nil)
+		backend := pgproto3.NewBackend(pgproto3.NewChunkReader(server), nil,nil)
 
 		msg, err := backend.ReceiveStartupMessage()
 		require.NoError(t, err)
@@ -110,7 +110,7 @@ func TestStartupMessage(t *testing.T) {
 				dst = pgio.AppendUint32(dst, pgproto3.ProtocolVersionNumber)
 				server.push(dst)
 
-				backend := pgproto3.NewBackend(pgproto3.NewChunkReader(server), nil)
+				backend := pgproto3.NewBackend(pgproto3.NewChunkReader(server), nil,nil)
 
 				msg, err := backend.ReceiveStartupMessage()
 				require.Error(t, err)

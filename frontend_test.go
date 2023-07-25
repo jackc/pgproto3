@@ -38,9 +38,9 @@ func TestFrontendReceiveInterrupted(t *testing.T) {
 	server := &interruptReader{}
 	server.push([]byte{'Z', 0, 0, 0, 5})
 
-	frontend := pgproto3.NewFrontend(pgproto3.NewChunkReader(server), nil)
+	frontend := pgproto3.NewFrontend(pgproto3.NewChunkReader(server), nil,nil)
 
-	msg, err := frontend.Receive()
+	msg, err := frontend.Receive(nil)
 	if err == nil {
 		t.Fatal("expected err")
 	}
@@ -50,7 +50,7 @@ func TestFrontendReceiveInterrupted(t *testing.T) {
 
 	server.push([]byte{'I'})
 
-	msg, err = frontend.Receive()
+	msg, err = frontend.Receive(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,9 +65,9 @@ func TestFrontendReceiveUnexpectedEOF(t *testing.T) {
 	server := &interruptReader{}
 	server.push([]byte{'Z', 0, 0, 0, 5})
 
-	frontend := pgproto3.NewFrontend(pgproto3.NewChunkReader(server), nil)
+	frontend := pgproto3.NewFrontend(pgproto3.NewChunkReader(server), nil,nil)
 
-	msg, err := frontend.Receive()
+	msg, err := frontend.Receive(nil)
 	if err == nil {
 		t.Fatal("expected err")
 	}
@@ -75,7 +75,7 @@ func TestFrontendReceiveUnexpectedEOF(t *testing.T) {
 		t.Fatalf("did not expect msg, but %v", msg)
 	}
 
-	msg, err = frontend.Receive()
+	msg, err = frontend.Receive(nil)
 	assert.Nil(t, msg)
 	assert.Equal(t, io.ErrUnexpectedEOF, err)
 }
@@ -109,9 +109,9 @@ func TestErrorResponse(t *testing.T) {
 	server := &interruptReader{}
 	server.push(raw)
 
-	frontend := pgproto3.NewFrontend(pgproto3.NewChunkReader(server), nil)
+	frontend := pgproto3.NewFrontend(pgproto3.NewChunkReader(server), nil,nil)
 
-	got, err := frontend.Receive()
+	got, err := frontend.Receive(nil)
 	require.NoError(t, err)
 	assert.Equal(t, want, got)
 }

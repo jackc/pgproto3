@@ -14,6 +14,7 @@ type ChunkReader interface {
 }
 
 // NewChunkReader creates and returns a new default ChunkReader.
+// in my opinion, chunk reader is reader 
 func NewChunkReader(r io.Reader) ChunkReader {
 	return chunkreader.New(r)
 }

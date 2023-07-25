@@ -22,6 +22,7 @@ func (dst *SASLResponse) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *SASLResponse) Encode(dst []byte) []byte {
+	println("SASLResponse.Encode")
 	dst = append(dst, 'p')
 	dst = pgio.AppendInt32(dst, int32(4+len(src.Data)))
 
