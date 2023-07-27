@@ -57,6 +57,7 @@ func (p *PgFortuneBackend) Run() error {
 					Format:               0,
 				},
 			}}).Encode(nil)
+			// basically this shows that it is being appended to the buffer
 			buf = (&pgproto3.DataRow{Values: [][]byte{response}}).Encode(buf)
 			buf = (&pgproto3.CommandComplete{CommandTag: []byte("SELECT 1")}).Encode(buf)
 			buf = (&pgproto3.ReadyForQuery{TxStatus: 'I'}).Encode(buf)

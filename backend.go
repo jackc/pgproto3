@@ -266,8 +266,6 @@ func (b *Backend) Receive(buf []byte) (FrontendMessage, error) {
 	b.partialMsg = false
 
 	err = msg.Decode(msgBody)
-	dest:= msg.Encode(msgBody)
-	println("dest:",dest)
 	return msg, err
 }
 

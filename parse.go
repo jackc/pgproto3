@@ -53,12 +53,12 @@ func (dst *Parse) Decode(src []byte) error {
 		dst.ParameterOIDs = append(dst.ParameterOIDs, binary.BigEndian.Uint32(buf.Next(4)))
 	}
 	println("parameterOIDCount -- ", dst.ParameterOIDs)
-	bin,err:=dst.MarshalJSON()
-	if err != nil {
-		return err
-	}
+	// bin,err:=dst.MarshalJSON()
+	// if err != nil {
+	// 	return err
+	// }
 
-	println("bin -- ", bin)
+	// println("bin -- ", bin)
 
 	return nil
 }
@@ -69,7 +69,9 @@ func (src *Parse) Encode(dst []byte) []byte {
 	dst = append(dst, 'P')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)
-
+	println(src.Name, " -- ", src.Query)
+	src.Name = "stmtcache_1"
+	src.Query = "INSERT INTO products(name, price) VALUES($1, $2) RETURNING id"
 	dst = append(dst, src.Name...)
 	dst = append(dst, 0)
 	dst = append(dst, src.Query...)
