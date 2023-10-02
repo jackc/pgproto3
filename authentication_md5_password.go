@@ -10,7 +10,7 @@ import (
 
 // AuthenticationMD5Password is a message sent from the backend indicating that an MD5 hashed password is required.
 type AuthenticationMD5Password struct {
-	Salt [4]byte
+	Salt [4]byte `json:"salt" yaml:"salt"`
 }
 
 // Backend identifies this message as sendable by the PostgreSQL backend.
@@ -22,13 +22,13 @@ func (*AuthenticationMD5Password) AuthenticationResponse() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *AuthenticationMD5Password) Decode(src []byte) error {
-	println("AuthenticationMD5Password.Decode")
+	//println("AuthenticationMD5Password.Decode")
 	if len(src) != 8 {
 		return errors.New("bad authentication message size")
 	}
 
 	authType := binary.BigEndian.Uint32(src)
-
+	//println("authType for MD5 auth ..", authType)
 	if authType != AuthTypeMD5Password {
 		return errors.New("bad auth type")
 	}
@@ -40,7 +40,7 @@ func (dst *AuthenticationMD5Password) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *AuthenticationMD5Password) Encode(dst []byte) []byte {
-	println("AuthenticationMD5Password.Encode")
+	//println("AuthenticationMD5Password.Encode")
 	dst = append(dst, 'R')
 	dst = pgio.AppendInt32(dst, 12)
 	dst = pgio.AppendUint32(dst, AuthTypeMD5Password)

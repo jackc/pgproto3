@@ -20,7 +20,7 @@ func (*CopyInResponse) Backend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *CopyInResponse) Decode(src []byte) error {
-	println("CopyInResponse.Decode")
+	//println("CopyInResponse.Decode")
 	buf := bytes.NewBuffer(src)
 
 	if buf.Len() < 3 {
@@ -46,7 +46,7 @@ func (dst *CopyInResponse) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *CopyInResponse) Encode(dst []byte) []byte {
-	println("CopyInResponse.Encode")
+	//println("CopyInResponse.Encode")
 	dst = append(dst, 'G')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)

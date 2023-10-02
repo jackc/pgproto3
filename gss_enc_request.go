@@ -17,7 +17,7 @@ type GSSEncRequest struct {
 func (*GSSEncRequest) Frontend() {}
 
 func (dst *GSSEncRequest) Decode(src []byte) error {
-	println("GSSEncRequest.Decode")
+	//println("GSSEncRequest.Decode")
 	if len(src) < 4 {
 		return errors.New("gss encoding request too short")
 	}
@@ -33,7 +33,7 @@ func (dst *GSSEncRequest) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 4 byte message length.
 func (src *GSSEncRequest) Encode(dst []byte) []byte {
-	println("GSSEncRequest.Encode")
+	//println("GSSEncRequest.Encode")
 	dst = pgio.AppendInt32(dst, 8)
 	dst = pgio.AppendInt32(dst, gssEncReqNumber)
 	return dst

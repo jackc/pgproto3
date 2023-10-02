@@ -14,13 +14,13 @@ const (
 )
 
 type FieldDescription struct {
-	Name                 []byte
-	TableOID             uint32
-	TableAttributeNumber uint16
-	DataTypeOID          uint32
-	DataTypeSize         int16
-	TypeModifier         int32
-	Format               int16
+	Name                 []byte `json:"name" yaml:"name"`
+	TableOID             uint32 `json:"table_oid" yaml:"table_oid"`
+	TableAttributeNumber uint16 `json:"table_attribute_number" yaml:"table_attribute_number"`
+	DataTypeOID          uint32 `json:"data_type_oid" yaml:"data_type_oid"`
+	DataTypeSize         int16  `json:"data_type_size" yaml:"data_type_size"`
+	TypeModifier         int32  `json:"type_modifier" yaml:"type_modifier"`
+	Format               int16  `json:"format" yaml:"format"`
 }
 
 // MarshalJSON implements encoding/json.Marshaler.
@@ -54,7 +54,7 @@ func (*RowDescription) Backend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *RowDescription) Decode(src []byte) error {
-	println("RowDescription.Decode")
+	//println("RowDescription.Decode")
 	if len(src) < 2 {
 		return &invalidMessageFormatErr{messageType: "RowDescription"}
 	}
@@ -100,7 +100,7 @@ func (dst *RowDescription) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *RowDescription) Encode(dst []byte) []byte {
-	println("RowDescription.Encode")
+	//println("RowDescription.Encode")
 	dst = append(dst, 'T')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)

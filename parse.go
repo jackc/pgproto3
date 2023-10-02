@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+
 	// "errors"
-	"fmt"
+
 	"github.com/jackc/pgio"
 )
 
 type Parse struct {
-	Name          string
-	Query         string
-	ParameterOIDs []uint32
+	Name          string   `json:"name" yaml:"name"`
+	Query         string   `json:"query" yaml:"query"`
+	ParameterOIDs []uint32 `json:"parameter_oids" yaml:"parameter_oids"`
 }
 
 // Frontend identifies this message as sendable by a PostgreSQL frontend.
@@ -22,8 +23,8 @@ func (*Parse) Frontend() {}
 // type identifier and 4 byte message length.
 // use this method for decoding the message
 func (dst *Parse) Decode(src []byte) error {
-	fmt.Println("Parse Decode")
-	
+	// fmt.//println("Parse Decode")
+
 	*dst = Parse{}
 
 	buf := bytes.NewBuffer(src)
@@ -33,45 +34,38 @@ func (dst *Parse) Decode(src []byte) error {
 		return err
 	}
 	dst.Name = string(b[:len(b)-1])
-	println("dst.Name -- ", dst.Name)
+	//println("dst.Name -- ", dst.Name)
 	b, err = buf.ReadBytes(0)
 	if err != nil {
 		return err
 	}
 	dst.Query = string(b[:len(b)-1])
-	println("dst.Query -- ", dst.Query)
+	//println("dst.Query -- ", dst.Query)
 	if buf.Len() < 2 {
 		return &invalidMessageFormatErr{messageType: "Parse"}
 	}
 
 	parameterOIDCount := int(binary.BigEndian.Uint16(buf.Next(2)))
-	
+
 	for i := 0; i < parameterOIDCount; i++ {
 		if buf.Len() < 4 {
 			return &invalidMessageFormatErr{messageType: "Parse"}
 		}
 		dst.ParameterOIDs = append(dst.ParameterOIDs, binary.BigEndian.Uint32(buf.Next(4)))
 	}
-	println("parameterOIDCount -- ", dst.ParameterOIDs)
-	// bin,err:=dst.MarshalJSON()
-	// if err != nil {
-	// 	return err
-	// }
-
-	// println("bin -- ", bin)
-
+	//println("parameterOIDCount -- ", dst.ParameterOIDs)
 	return nil
 }
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *Parse) Encode(dst []byte) []byte {
-	println("Parse.Encode")
+	//println("Parse.Encode")
 	dst = append(dst, 'P')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)
-	println(src.Name, " -- ", src.Query)
-	src.Name = "stmtcache_1"
-	src.Query = "INSERT INTO products(name, price) VALUES($1, $2) RETURNING id"
+	//println(src.Name, " -- ", src.Query)
+	// src.Name = "stmtcache_1"
+	// src.Query = "INSERT INTO products(name, price) VALUES($1, $2) RETURNING id"
 	dst = append(dst, src.Name...)
 	dst = append(dst, 0)
 	dst = append(dst, src.Query...)
@@ -87,7 +81,7 @@ func (src *Parse) Encode(dst []byte) []byte {
 }
 
 // MarshalJSON implements encoding/json.Marshaler.
-// to store the data in json format you have to unmarshal it again 
+// to store the data in json format you have to unmarshal it again
 func (src Parse) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		Type          string

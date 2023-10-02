@@ -15,11 +15,12 @@ type ByteReader struct {
 func NewByteReader(data []byte) *ByteReader {
 	return &ByteReader{data: data, pos: 0}
 }
+
 // Backend acts as a server for the PostgreSQL wire protocol version 3.
 type Backend struct {
 	cr ChunkReader
 	w  io.Writer
-	r io.Reader
+	r  io.Reader
 	// Frontend message flyweights
 	bind           Bind
 	cancelRequest  CancelRequest
@@ -113,11 +114,10 @@ func (b *Backend) ReceiveStartupMessage() (FrontendMessage, error) {
 	}
 }
 
-
 func (b *Backend) ReceiveStartupMessage2(buf []byte) (FrontendMessage, error) {
-	br:=NewByteReader(buf)
-	buf,err := br.Next(4)
-	println("buf:",buf)
+	br := NewByteReader(buf)
+	buf, err := br.Next(4)
+	
 	if err != nil {
 		return nil, err
 	}
@@ -128,8 +128,8 @@ func (b *Backend) ReceiveStartupMessage2(buf []byte) (FrontendMessage, error) {
 	}
 
 	// buf, err := b.cr.Next(msgSize)
-	
-	buf,err = br.Next(msgSize)
+
+	buf, err = br.Next(msgSize)
 	if err != nil {
 		return nil, translateEOFtoErrUnexpectedEOF(err)
 	}
@@ -166,7 +166,6 @@ func (b *Backend) ReceiveStartupMessage2(buf []byte) (FrontendMessage, error) {
 	}
 }
 
-
 func (br *ByteReader) Next(n int) ([]byte, error) {
 	if n < 0 {
 		return nil, errors.New("n must be greater than 0")
@@ -188,27 +187,8 @@ func (br *ByteReader) Next(n int) ([]byte, error) {
 
 // receive backend message
 // Receive receives a message from the frontend. The returned message is only valid until the next call to Receive.
-func (b *Backend) Receive(buf []byte) (FrontendMessage, error) {
-	print("backend receive\n")
-	br:=NewByteReader(buf)
-	if !b.partialMsg {
-		header, err := br.Next(5) // here it causing unexpected EOF , this was removed for 
-		if err != nil {
-			println("err: unexpected eof", err)
-			return nil, translateEOFtoErrUnexpectedEOF(err)
-		}
-		println("header:",header)
-		b.msgType = header[0] 
-		// remaining:=header[1:]
-		// println("remaining bytes after extracting headers :",remaining, "len:",len(remaining))
-		b.bodyLen = int(binary.BigEndian.Uint32(header[1:])) - 4
-		b.partialMsg = false
-		if b.bodyLen < 0 {
-			return nil, errors.New("invalid message with negative body length received")
-		}
-	}
+func (b *Backend) Receive(msgBody []byte) (FrontendMessage, error) {
 
-	fmt.Println("msgType", b.msgType)
 	var msg FrontendMessage
 	switch b.msgType {
 	case 'B':
@@ -257,15 +237,7 @@ func (b *Backend) Receive(buf []byte) (FrontendMessage, error) {
 		return nil, fmt.Errorf("unknown message type: %c", b.msgType)
 	}
 
-	msgBody, err := br.Next(b.bodyLen)
-	println("msgBody", msgBody)
-	if err != nil {
-		return nil, translateEOFtoErrUnexpectedEOF(err)
-	}
-
-	b.partialMsg = false
-
-	err = msg.Decode(msgBody)
+	err := msg.Decode(msgBody)
 	return msg, err
 }
 
@@ -274,11 +246,11 @@ func (b *Backend) Receive(buf []byte) (FrontendMessage, error) {
 // contextual identification of FrontendMessages. For example, in the
 // PG message flow documentation for PasswordMessage:
 //
-// 		Byte1('p')
+//			Byte1('p')
 //
-//      Identifies the message as a password response. Note that this is also used for
-//		GSSAPI, SSPI and SASL response messages. The exact message type can be deduced from
-//		the context.
+//	     Identifies the message as a password response. Note that this is also used for
+//			GSSAPI, SSPI and SASL response messages. The exact message type can be deduced from
+//			the context.
 //
 // Since the Frontend does not know about the state of a backend, it is important
 // to call SetAuthType() after an authentication request is received by the Frontend.
@@ -302,10 +274,7 @@ func (b *Backend) SetAuthType(authType uint32) error {
 	return nil
 }
 
+func Next(n int) []byte {
 
-func Next(n int)[]byte{
-	
-	
-	
 	return nil
 }

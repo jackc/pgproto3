@@ -11,7 +11,7 @@ import (
 type Message interface {
 	// Decode is allowed and expected to retain a reference to data after
 	// returning (unlike encoding.BinaryUnmarshaler).
-	Decode(data []byte) error
+	Decode(data []byte) (error)
 
 	// Encode appends itself to dst and returns the new buffer.
 	Encode(dst []byte) []byte
@@ -20,6 +20,7 @@ type Message interface {
 type FrontendMessage interface {
 	Message
 	Frontend() // no-op method to distinguish frontend from backend methods
+	
 }
 
 type BackendMessage interface {

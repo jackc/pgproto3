@@ -2,14 +2,15 @@ package pgproto3
 
 import (
 	"encoding/binary"
+
 	"github.com/jackc/pgio"
 )
 
 type FunctionCall struct {
-	Function         uint32
-	ArgFormatCodes   []uint16
-	Arguments        [][]byte
-	ResultFormatCode uint16
+	Function         uint32   `json:"function" yaml:"function"`
+	ArgFormatCodes   []uint16 `json:"arg_format_codes" yaml:"arg_format_codes"`
+	Arguments        [][]byte `json:"arguments" yaml:"arguments"`
+	ResultFormatCode uint16   `json:"result_format_code" yaml:"result_format_code"`
 }
 
 // Frontend identifies this message as sendable by a PostgreSQL frontend.
@@ -72,7 +73,7 @@ func (dst *FunctionCall) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *FunctionCall) Encode(dst []byte) []byte {
-	println("FunctionCall.Encode")
+	//println("FunctionCall.Encode")
 	dst = append(dst, 'F')
 	sp := len(dst)
 	dst = pgio.AppendUint32(dst, 0) // Unknown length, set it at the end

@@ -9,9 +9,9 @@ import (
 )
 
 type NotificationResponse struct {
-	PID     uint32
-	Channel string
-	Payload string
+	PID     uint32 `json:"pid" yaml:"pid"`
+	Channel string `json:"channel" yaml:"channel"`
+	Payload string `json:"payload" yaml:"payload"`
 }
 
 // Backend identifies this message as sendable by the PostgreSQL backend.
@@ -20,7 +20,7 @@ func (*NotificationResponse) Backend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *NotificationResponse) Decode(src []byte) error {
-	println("NotificationResponse.Decode")
+	//println("NotificationResponse.Decode")
 	buf := bytes.NewBuffer(src)
 
 	pid := binary.BigEndian.Uint32(buf.Next(4))
@@ -43,7 +43,7 @@ func (dst *NotificationResponse) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *NotificationResponse) Encode(dst []byte) []byte {
-	println("NotificationResponse.Encode")
+	//println("NotificationResponse.Encode")
 	dst = append(dst, 'A')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)

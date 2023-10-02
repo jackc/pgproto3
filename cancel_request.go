@@ -11,8 +11,8 @@ import (
 const cancelRequestCode = 80877102
 
 type CancelRequest struct {
-	ProcessID uint32
-	SecretKey uint32
+	ProcessID uint32 `json:"process_id" yaml:"process_id"`
+	SecretKey uint32  `json:"secret_key" yaml:"secret_key"`
 }
 
 // Frontend identifies this message as sendable by a PostgreSQL frontend.
