@@ -15,12 +15,12 @@ func (dst *PortalSuspended) Decode(src []byte) error {
 	if len(src) != 0 {
 		return &invalidMessageLenErr{messageType: "PortalSuspended", expectedLen: 0, actualLen: len(src)}
 	}
-
 	return nil
 }
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *PortalSuspended) Encode(dst []byte) []byte {
+	//println("PortalSuspended.Encode")
 	return append(dst, 's', 0, 0, 0, 4)
 }
 

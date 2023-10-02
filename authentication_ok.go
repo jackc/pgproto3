@@ -21,12 +21,13 @@ func (*AuthenticationOk) AuthenticationResponse() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *AuthenticationOk) Decode(src []byte) error {
+	//println("AuthenticationOk.Decode")
 	if len(src) != 4 {
 		return errors.New("bad authentication message size")
 	}
 
 	authType := binary.BigEndian.Uint32(src)
-
+	//println("authType for OK auth ..", authType)
 	if authType != AuthTypeOk {
 		return errors.New("bad auth type")
 	}
@@ -36,6 +37,7 @@ func (dst *AuthenticationOk) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *AuthenticationOk) Encode(dst []byte) []byte {
+	//println("AuthenticationOk.Encode")
 	dst = append(dst, 'R')
 	dst = pgio.AppendInt32(dst, 8)
 	dst = pgio.AppendUint32(dst, AuthTypeOk)

@@ -9,8 +9,8 @@ import (
 )
 
 type SASLInitialResponse struct {
-	AuthMechanism string
-	Data          []byte
+	AuthMechanism string `json:"auth_mechanism" yaml:"auth_mechanism"`
+	Data          []byte `json:"data" yaml:"data"`
 }
 
 // Frontend identifies this message as sendable by a PostgreSQL frontend.
@@ -19,6 +19,7 @@ func (*SASLInitialResponse) Frontend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *SASLInitialResponse) Decode(src []byte) error {
+	//println("SASLInitialResponse.Decode")
 	*dst = SASLInitialResponse{}
 
 	rp := 0
@@ -39,6 +40,7 @@ func (dst *SASLInitialResponse) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *SASLInitialResponse) Encode(dst []byte) []byte {
+	//println("SASLInitialResponse.Encode")
 	dst = append(dst, 'p')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)

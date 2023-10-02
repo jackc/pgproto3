@@ -11,14 +11,15 @@ import (
 const cancelRequestCode = 80877102
 
 type CancelRequest struct {
-	ProcessID uint32
-	SecretKey uint32
+	ProcessID uint32 `json:"process_id" yaml:"process_id"`
+	SecretKey uint32  `json:"secret_key" yaml:"secret_key"`
 }
 
 // Frontend identifies this message as sendable by a PostgreSQL frontend.
 func (*CancelRequest) Frontend() {}
 
 func (dst *CancelRequest) Decode(src []byte) error {
+	println("CancelRequest.Decode")
 	if len(src) != 12 {
 		return errors.New("bad cancel request size")
 	}
@@ -37,6 +38,7 @@ func (dst *CancelRequest) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 4 byte message length.
 func (src *CancelRequest) Encode(dst []byte) []byte {
+	println("CancelRequest.Encode")
 	dst = pgio.AppendInt32(dst, 16)
 	dst = pgio.AppendInt32(dst, cancelRequestCode)
 	dst = pgio.AppendUint32(dst, src.ProcessID)

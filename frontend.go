@@ -9,9 +9,9 @@ import (
 
 // Frontend acts as a client for the PostgreSQL wire protocol version 3.
 type Frontend struct {
-	cr ChunkReader
+	cr ChunkReader // instead of chunkreader use normal reader
 	w  io.Writer
-
+	r  io.Reader
 	// Backend message flyweights
 	authenticationOk                AuthenticationOk
 	authenticationCleartextPassword AuthenticationCleartextPassword
@@ -51,8 +51,8 @@ type Frontend struct {
 }
 
 // NewFrontend creates a new Frontend.
-func NewFrontend(cr ChunkReader, w io.Writer) *Frontend {
-	return &Frontend{cr: cr, w: w}
+func NewFrontend(cr ChunkReader, w io.Writer, r io.Reader) *Frontend {
+	return &Frontend{cr: cr, w: w, r: r}
 }
 
 // Send sends a message to the backend.
@@ -68,28 +68,11 @@ func translateEOFtoErrUnexpectedEOF(err error) error {
 	return err
 }
 
+// recieves backend message
 // Receive receives a message from the backend. The returned message is only valid until the next call to Receive.
-func (f *Frontend) Receive() (BackendMessage, error) {
-	if !f.partialMsg {
-		header, err := f.cr.Next(5)
-		if err != nil {
-			return nil, translateEOFtoErrUnexpectedEOF(err)
-		}
-
-		f.msgType = header[0]
-		f.bodyLen = int(binary.BigEndian.Uint32(header[1:])) - 4
-		f.partialMsg = true
-		if f.bodyLen < 0 {
-			return nil, errors.New("invalid message with negative body length received")
-		}
-	}
-
-	msgBody, err := f.cr.Next(f.bodyLen)
-	if err != nil {
-		return nil, translateEOFtoErrUnexpectedEOF(err)
-	}
-
-	f.partialMsg = false
+func (f *Frontend) Receive(msgBody []byte) (BackendMessage, error) {
+	// this value has to be now set before calling this method ..
+	// f.msgType = buf[0]
 
 	var msg BackendMessage
 	switch f.msgType {
@@ -147,7 +130,10 @@ func (f *Frontend) Receive() (BackendMessage, error) {
 		return nil, fmt.Errorf("unknown message type: %c", f.msgType)
 	}
 
-	err = msg.Decode(msgBody)
+	err := msg.Decode(msgBody)
+	msg.Backend()
+
+	//println("msgtype", f.msgType, "msgbody", msgBody, "msg", msg)
 	return msg, err
 }
 
@@ -172,7 +158,7 @@ func (f *Frontend) findAuthenticationMessageType(src []byte) (BackendMessage, er
 		return nil, errors.New("authentication message too short")
 	}
 	f.authType = binary.BigEndian.Uint32(src[:4])
-
+	//println("authType***  ** * * * * ", f.authType)
 	switch f.authType {
 	case AuthTypeOk:
 		return &f.authenticationOk, nil

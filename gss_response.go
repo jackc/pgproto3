@@ -2,22 +2,25 @@ package pgproto3
 
 import (
 	"encoding/json"
+
 	"github.com/jackc/pgio"
 )
 
 type GSSResponse struct {
-	Data []byte
+	Data []byte `json:"data" yaml:"data"`
 }
 
 // Frontend identifies this message as sendable by a PostgreSQL frontend.
 func (g *GSSResponse) Frontend() {}
 
 func (g *GSSResponse) Decode(data []byte) error {
+	//println("GSSResponse.Decode")
 	g.Data = data
 	return nil
 }
 
 func (g *GSSResponse) Encode(dst []byte) []byte {
+	//println("GSSResponse.Encode")
 	dst = append(dst, 'p')
 	dst = pgio.AppendInt32(dst, int32(4+len(g.Data)))
 	dst = append(dst, g.Data...)

@@ -10,7 +10,7 @@ import (
 
 // AuthenticationSASLFinal is a message sent from the backend indicating a SASL authentication has completed.
 type AuthenticationSASLFinal struct {
-	Data []byte
+	Data []byte `json:"data" yaml:"data"`
 }
 
 // Backend identifies this message as sendable by the PostgreSQL backend.
@@ -22,6 +22,7 @@ func (*AuthenticationSASLFinal) AuthenticationResponse() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *AuthenticationSASLFinal) Decode(src []byte) error {
+	//println("AuthenticationSASLFinal.Decode")
 	if len(src) < 4 {
 		return errors.New("authentication message too short")
 	}
@@ -39,6 +40,7 @@ func (dst *AuthenticationSASLFinal) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *AuthenticationSASLFinal) Encode(dst []byte) []byte {
+	//println("AuthenticationSASLFinal.Encode")
 	dst = append(dst, 'R')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)

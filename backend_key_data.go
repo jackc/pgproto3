@@ -8,8 +8,8 @@ import (
 )
 
 type BackendKeyData struct {
-	ProcessID uint32
-	SecretKey uint32
+	ProcessID uint32 `json:"process_id" yaml:"process_id"`
+	SecretKey uint32 `json:"secret_key" yaml:"secret_key"`
 }
 
 // Backend identifies this message as sendable by the PostgreSQL backend.
@@ -18,6 +18,7 @@ func (*BackendKeyData) Backend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *BackendKeyData) Decode(src []byte) error {
+	//println("BackendKeyData.Decode")
 	if len(src) != 8 {
 		return &invalidMessageLenErr{messageType: "BackendKeyData", expectedLen: 8, actualLen: len(src)}
 	}
@@ -30,6 +31,7 @@ func (dst *BackendKeyData) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *BackendKeyData) Encode(dst []byte) []byte {
+	//println("BackendKeyData.Encode")
 	dst = append(dst, 'K')
 	dst = pgio.AppendUint32(dst, 12)
 	dst = pgio.AppendUint32(dst, src.ProcessID)

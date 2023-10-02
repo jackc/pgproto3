@@ -9,8 +9,8 @@ import (
 )
 
 type Execute struct {
-	Portal  string
-	MaxRows uint32
+	Portal  string `json:"portal,omitempty" yaml:"portal,omitempty"`
+	MaxRows uint32 `json:"max_rows,omitempty" yaml:"max_rows,omitempty"`
 }
 
 // Frontend identifies this message as sendable by a PostgreSQL frontend.
@@ -19,6 +19,7 @@ func (*Execute) Frontend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *Execute) Decode(src []byte) error {
+	//println("Execute Decode")
 	buf := bytes.NewBuffer(src)
 
 	b, err := buf.ReadBytes(0)
@@ -37,6 +38,7 @@ func (dst *Execute) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *Execute) Encode(dst []byte) []byte {
+	//println("Execute.Encode")
 	dst = append(dst, 'E')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)

@@ -11,11 +11,11 @@ import (
 )
 
 type Bind struct {
-	DestinationPortal    string
-	PreparedStatement    string
-	ParameterFormatCodes []int16
-	Parameters           [][]byte
-	ResultFormatCodes    []int16
+	DestinationPortal    string   `json:"destination_portal,omitempty" yaml:"destination_portal,omitempty"`
+	PreparedStatement    string   `json:"prepared_statement,omitempty" yaml:"prepared_statement,omitempty"`
+	ParameterFormatCodes []int16  `json:"parameter_format_codes,omitempty" yaml:"parameter_format_codes,omitempty"`
+	Parameters           [][]byte `json:"parameters,omitempty" yaml:"parameters,omitempty"`
+	ResultFormatCodes    []int16  `json:"result_format_codes,omitempty" yaml:"result_format_codes,omitempty"`
 }
 
 // Frontend identifies this message as sendable by a PostgreSQL frontend.
@@ -24,6 +24,7 @@ func (*Bind) Frontend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *Bind) Decode(src []byte) error {
+	//println("Bind.Decode")
 	*dst = Bind{}
 
 	idx := bytes.IndexByte(src, 0)
@@ -103,12 +104,14 @@ func (dst *Bind) Decode(src []byte) error {
 		dst.ResultFormatCodes[i] = int16(binary.BigEndian.Uint16(src[rp:]))
 		rp += 2
 	}
+	dst.MarshalJSON()
 
 	return nil
 }
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *Bind) Encode(dst []byte) []byte {
+	// //println("Bind.Encode")
 	dst = append(dst, 'B')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)
@@ -145,7 +148,7 @@ func (src *Bind) Encode(dst []byte) []byte {
 }
 
 // MarshalJSON implements encoding/json.Marshaler.
-func (src Bind) MarshalJSON() ([]byte, error) {
+func (src *Bind) MarshalJSON() ([]byte, error) {
 	formattedParameters := make([]map[string]string, len(src.Parameters))
 	for i, p := range src.Parameters {
 		if p == nil {

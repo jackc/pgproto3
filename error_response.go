@@ -8,26 +8,26 @@ import (
 )
 
 type ErrorResponse struct {
-	Severity            string
-	SeverityUnlocalized string // only in 9.6 and greater
-	Code                string
-	Message             string
-	Detail              string
-	Hint                string
-	Position            int32
-	InternalPosition    int32
-	InternalQuery       string
-	Where               string
-	SchemaName          string
-	TableName           string
-	ColumnName          string
-	DataTypeName        string
-	ConstraintName      string
-	File                string
-	Line                int32
-	Routine             string
+	Severity            string `json:"severity" yaml:"severity"`
+	SeverityUnlocalized string `json:"severity_unlocalized" yaml:"severity_unlocalized"`
+	Code                string `json:"code" yaml:"code"`
+	Message             string `json:"message" yaml:"message"`
+	Detail              string `json:"detail" yaml:"detail"`
+	Hint                string `json:"hint" yaml:"hint"`
+	Position            int32  `json:"position" yaml:"position"`
+	InternalPosition    int32  `json:"internal_position" yaml:"internal_position"`
+	InternalQuery       string `json:"internal_query" yaml:"internal_query"`
+	Where               string `json:"where" yaml:"where"`
+	SchemaName          string `json:"schema_name" yaml:"schema_name"`
+	TableName           string `json:"table_name" yaml:"table_name"`
+	ColumnName          string `json:"column_name" yaml:"column_name"`
+	DataTypeName        string `json:"data_type_name" yaml:"data_type_name"`
+	ConstraintName      string `json:"constraint_name" yaml:"constraint_name"`
+	File                string `json:"file" yaml:"file"`
+	Line                int32  `json:"line" yaml:"line"`
+	Routine             string `json:"routine" yaml:"routine"`
 
-	UnknownFields map[byte]string
+	UnknownFields map[byte]string `json:"unknown_fields" yaml:"unknown_fields"`
 }
 
 // Backend identifies this message as sendable by the PostgreSQL backend.
@@ -36,6 +36,7 @@ func (*ErrorResponse) Backend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *ErrorResponse) Decode(src []byte) error {
+	//println("ErrorResponse.Decode")
 	*dst = ErrorResponse{}
 
 	buf := bytes.NewBuffer(src)
@@ -112,6 +113,7 @@ func (dst *ErrorResponse) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *ErrorResponse) Encode(dst []byte) []byte {
+	//println("ErrorResponse.Encode")
 	return append(dst, src.marshalBinary('E')...)
 }
 

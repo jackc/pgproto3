@@ -4,11 +4,12 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+
 	"github.com/jackc/pgio"
 )
 
 type AuthenticationGSSContinue struct {
-	Data []byte
+	Data []byte `json:"data" yaml:"data"`
 }
 
 func (a *AuthenticationGSSContinue) Backend() {}
@@ -16,6 +17,7 @@ func (a *AuthenticationGSSContinue) Backend() {}
 func (a *AuthenticationGSSContinue) AuthenticationResponse() {}
 
 func (a *AuthenticationGSSContinue) Decode(src []byte) error {
+	//println("AuthenticationGSSContinue.Decode")
 	if len(src) < 4 {
 		return errors.New("authentication message too short")
 	}
@@ -31,6 +33,7 @@ func (a *AuthenticationGSSContinue) Decode(src []byte) error {
 }
 
 func (a *AuthenticationGSSContinue) Encode(dst []byte) []byte {
+	//println("AuthenticationGSSContinue.Encode")
 	dst = append(dst, 'R')
 	dst = pgio.AppendInt32(dst, int32(len(a.Data))+8)
 	dst = pgio.AppendUint32(dst, AuthTypeGSSCont)

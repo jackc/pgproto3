@@ -12,6 +12,7 @@ func (*ParseComplete) Backend() {}
 // Decode decodes src into dst. src must contain the complete message with the exception of the initial 1 byte message
 // type identifier and 4 byte message length.
 func (dst *ParseComplete) Decode(src []byte) error {
+	//println("ParseComplete.Decode")
 	if len(src) != 0 {
 		return &invalidMessageLenErr{messageType: "ParseComplete", expectedLen: 0, actualLen: len(src)}
 	}
@@ -21,6 +22,7 @@ func (dst *ParseComplete) Decode(src []byte) error {
 
 // Encode encodes src into dst. dst will include the 1 byte message type identifier and the 4 byte message length.
 func (src *ParseComplete) Encode(dst []byte) []byte {
+	//println("ParseComplete.Encode")
 	return append(dst, '1', 0, 0, 0, 4)
 }
 
