@@ -11,6 +11,8 @@ import (
 const sslRequestNumber = 80877103
 
 type SSLRequest struct {
+	// if it doesn't work add here any struct
+	IsSSL bool `json:"is_ssl" yaml:"is_ssl"`
 }
 
 // Frontend identifies this message as sendable by a PostgreSQL frontend.
@@ -20,13 +22,13 @@ func (dst *SSLRequest) Decode(src []byte) error {
 	if len(src) < 4 {
 		return errors.New("ssl request too short")
 	}
-
+	
 	requestCode := binary.BigEndian.Uint32(src)
-
+	dst.IsSSL = true
 	if requestCode != sslRequestNumber {
 		return errors.New("bad ssl request code")
 	}
-
+ 
 	return nil
 }
 

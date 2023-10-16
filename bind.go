@@ -13,9 +13,9 @@ import (
 type Bind struct {
 	DestinationPortal    string   `json:"destination_portal,omitempty" yaml:"destination_portal,omitempty"`
 	PreparedStatement    string   `json:"prepared_statement,omitempty" yaml:"prepared_statement,omitempty"`
-	ParameterFormatCodes []int16  `json:"parameter_format_codes,omitempty" yaml:"parameter_format_codes,omitempty"`
-	Parameters           [][]byte `json:"parameters,omitempty" yaml:"parameters,omitempty"`
-	ResultFormatCodes    []int16  `json:"result_format_codes,omitempty" yaml:"result_format_codes,omitempty"`
+	ParameterFormatCodes []int16  `json:"parameter_format_codes,omitempty" yaml:"parameter_format_codes,omitempty,flow"`
+	Parameters           [][]byte `json:"parameters,omitempty" yaml:"parameters,omitempty,flow"`
+	ResultFormatCodes    []int16  `json:"result_format_codes,omitempty" yaml:"result_format_codes,omitempty,flow"`
 }
 
 // Frontend identifies this message as sendable by a PostgreSQL frontend.
@@ -39,6 +39,7 @@ func (dst *Bind) Decode(src []byte) error {
 		return &invalidMessageFormatErr{messageType: "Bind"}
 	}
 	dst.PreparedStatement = string(src[rp : rp+idx])
+	// fmt.Printf("PreparedStatement: %s\n", dst.PreparedStatement)
 	rp += idx + 1
 
 	if len(src[rp:]) < 2 {
@@ -104,7 +105,7 @@ func (dst *Bind) Decode(src []byte) error {
 		dst.ResultFormatCodes[i] = int16(binary.BigEndian.Uint16(src[rp:]))
 		rp += 2
 	}
-	dst.MarshalJSON()
+	
 
 	return nil
 }
