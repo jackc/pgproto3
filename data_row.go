@@ -11,7 +11,7 @@ import (
 )
 
 type DataRow struct {
-	Values    [][]byte `json:"values" yaml:"_"`
+	Values    [][]byte `json:"values" yaml:"-"`
 	RowValues []string `json:"row_values" yaml:"row_values"`
 }
 
