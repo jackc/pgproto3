@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"regexp"
+	"strings"
 
 	// "errors"
 
@@ -40,7 +42,14 @@ func (dst *Parse) Decode(src []byte) error {
 		return err
 	}
 	dst.Query = string(b[:len(b)-1])
-	//println("dst.Query -- ", dst.Query)
+	// println("dst.Query -- ", dst.Query)
+	// Replace newline characters with spaces
+	dst.Query  = strings.ReplaceAll(dst.Query , "\n", " ")
+
+	// Use a regular expression to reduce multiple spaces to a single space
+	re := regexp.MustCompile(`\s+`)
+	dst.Query  = re.ReplaceAllString(dst.Query , " ")
+
 	if buf.Len() < 2 {
 		return &invalidMessageFormatErr{messageType: "Parse"}
 	}

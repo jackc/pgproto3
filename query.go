@@ -3,6 +3,8 @@ package pgproto3
 import (
 	"bytes"
 	"encoding/json"
+	"regexp"
+	"strings"
 
 	"github.com/jackc/pgio"
 )
@@ -24,6 +26,12 @@ func (dst *Query) Decode(src []byte) error {
 	}
 
 	dst.String = string(src[:i])
+	// fmt.Println("dst.String BEFORE-- ", dst.String)
+	dst.String = strings.ReplaceAll(dst.String, "\n", " ")
+	// fmt.Println("dst.String AFTER-- ", dst.String)
+	// Use a regular expression to reduce multiple spaces to a single space
+	re := regexp.MustCompile(`\s+`)
+	dst.String = re.ReplaceAllString(dst.String, " ")
 
 	return nil
 }
