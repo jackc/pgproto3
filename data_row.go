@@ -1,15 +1,18 @@
 package pgproto3
 
 import (
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"unicode"
 
 	"github.com/jackc/pgio"
 )
 
 type DataRow struct {
-	Values [][]byte `json:"values" yaml:"values"`
+	Values    [][]byte `json:"values" yaml:"_"`
+	RowValues []string `json:"row_values" yaml:"row_values"`
 }
 
 // Backend identifies this message as sendable by the PostgreSQL backend.
@@ -59,7 +62,18 @@ func (dst *DataRow) Decode(src []byte) error {
 			rp += msgSize
 		}
 	}
-	
+	for _, v := range dst.Values {
+		// fmt.Println(string(v))
+		bufStr := ""
+		if !IsAsciiPrintable(string(v)) {
+			bufStr = base64.StdEncoding.EncodeToString(v)
+			bufStr = "base64:" + bufStr
+			dst.RowValues = append(dst.RowValues, bufStr)
+			// println("NON PRINTABLE STRING FOUND !")
+			continue
+		}
+		dst.RowValues = append(dst.RowValues, string(v))
+	}
 
 	return nil
 }
@@ -70,7 +84,7 @@ func (src *DataRow) Encode(dst []byte) []byte {
 	dst = append(dst, 'D')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)
-
+	src.Values = stringsToBytesArray(src.RowValues)
 	dst = pgio.AppendUint16(dst, uint16(len(src.Values)))
 	for _, v := range src.Values {
 		if v == nil {
@@ -85,6 +99,31 @@ func (src *DataRow) Encode(dst []byte) []byte {
 	pgio.SetInt32(dst[sp:], int32(len(dst[sp:])))
 
 	return dst
+}
+
+func stringsToBytesArray(strArray []string) [][]byte {
+	byteArray := make([][]byte, len(strArray))
+
+	for i, str := range strArray {
+		// if str[0] == 'b' && str[1] == 'a' && str[2] == 's' && str[3] == 'e' {
+		// 	// slic and decode
+		// 	byteArray[i], _ = base64.StdEncoding.DecodeString(str[7:])
+		// 	continue
+		// }
+		byteArray[i] = []byte(str)
+	}
+
+	return byteArray
+}
+
+// checks if s is ascii and printable, aka doesn't include tab, backspace, etc.
+func IsAsciiPrintable(s string) bool {
+	for _, r := range s {
+		if r > unicode.MaxASCII || (!unicode.IsPrint(r) && r != '\r' && r != '\n') {
+			return false
+		}
+	}
+	return true
 }
 
 // MarshalJSON implements encoding/json.Marshaler.
