@@ -12,7 +12,7 @@ import (
 
 type DataRow struct {
 	Values    [][]byte `json:"values" yaml:"-"`
-	RowValues []string `json:"row_values" yaml:"row_values"`
+	RowValues []string `json:"row_values" yaml:"row_values,flow"`
 }
 
 // Backend identifies this message as sendable by the PostgreSQL backend.
