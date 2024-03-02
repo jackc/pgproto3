@@ -14,7 +14,8 @@ const (
 )
 
 type FieldDescription struct {
-	Name                 []byte `json:"name" yaml:"name"`
+	Name                 []byte `json:"-" yaml:"-"`
+	FieldName            string `json:"name" yaml:"name"`
 	TableOID             uint32 `json:"table_oid" yaml:"table_oid"`
 	TableAttributeNumber uint16 `json:"table_attribute_number" yaml:"table_attribute_number"`
 	DataTypeOID          uint32 `json:"data_type_oid" yaml:"data_type_oid"`
@@ -71,6 +72,7 @@ func (dst *RowDescription) Decode(src []byte) error {
 			return &invalidMessageFormatErr{messageType: "RowDescription"}
 		}
 		fd.Name = src[rp : rp+idx]
+		fd.FieldName = string(fd.Name)
 		rp += idx + 1
 
 		// Since buf.Next() doesn't return an error if we hit the end of the buffer
@@ -107,6 +109,8 @@ func (src *RowDescription) Encode(dst []byte) []byte {
 
 	dst = pgio.AppendUint16(dst, uint16(len(src.Fields)))
 	for _, fd := range src.Fields {
+
+		fd.Name = []byte(fd.FieldName)
 		dst = append(dst, fd.Name...)
 		dst = append(dst, 0)
 

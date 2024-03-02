@@ -10,7 +10,7 @@ import (
 
 // AuthenticationMD5Password is a message sent from the backend indicating that an MD5 hashed password is required.
 type AuthenticationMD5Password struct {
-	Salt [4]byte `json:"salt" yaml:"salt"`
+	Salt [4]byte `json:"salt" yaml:"salt,omitempty,flow"`
 }
 
 // Backend identifies this message as sendable by the PostgreSQL backend.

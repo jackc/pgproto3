@@ -8,7 +8,8 @@ import (
 )
 
 type CommandComplete struct {
-	CommandTag []byte `json:"command_tag" yaml:"command_tag"`
+	CommandTag     []byte `json:"-" yaml:"-"`
+	CommandTagType string `json:"command_tag_type" yaml:"command_tag_type"`
 }
 
 // Backend identifies this message as sendable by the PostgreSQL backend.
@@ -24,6 +25,7 @@ func (dst *CommandComplete) Decode(src []byte) error {
 	}
 
 	dst.CommandTag = src[:idx]
+	dst.CommandTagType = string(dst.CommandTag)
 
 	return nil
 }
@@ -34,7 +36,7 @@ func (src *CommandComplete) Encode(dst []byte) []byte {
 	dst = append(dst, 'C')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)
-
+	src.CommandTag = []byte(src.CommandTagType)
 	dst = append(dst, src.CommandTag...)
 	dst = append(dst, 0)
 
