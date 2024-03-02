@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"unicode"
 
 	"github.com/jackc/pgio"
@@ -52,7 +53,7 @@ func (dst *DataRow) Decode(src []byte) error {
 
 		// null
 		if msgSize == -1 {
-			dst.Values[i] = nil
+			dst.Values[i] = nil //[]byte{255, 255, 255, 255}
 		} else {
 			if len(src[rp:]) < msgSize {
 				return &invalidMessageFormatErr{messageType: "DataRow"}
@@ -62,17 +63,22 @@ func (dst *DataRow) Decode(src []byte) error {
 			rp += msgSize
 		}
 	}
+	// fmt.Println("DECODED VALUES", dst.Values)
+	dst.RowValues = []string{}
 	for _, v := range dst.Values {
 		// fmt.Println(string(v))
 		bufStr := ""
+		// if v == nil {
+		// 	bufStr = "NIL"
+		// 	dst.RowValues = append(dst.RowValues, bufStr)
+		// 	continue
+		// }
 		if !IsAsciiPrintable(string(v)) {
-			bufStr = base64.StdEncoding.EncodeToString(v)
-			bufStr = "base64:" + bufStr
-			dst.RowValues = append(dst.RowValues, bufStr)
-			// println("NON PRINTABLE STRING FOUND !")
-			continue
+			bufStr = "b64:" + base64.StdEncoding.EncodeToString(v)
+		} else {
+			bufStr = string(v)
 		}
-		dst.RowValues = append(dst.RowValues, string(v))
+		dst.RowValues = append(dst.RowValues, bufStr)
 	}
 
 	return nil
@@ -84,20 +90,44 @@ func (src *DataRow) Encode(dst []byte) []byte {
 	dst = append(dst, 'D')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)
-	src.Values = stringsToBytesArray(src.RowValues)
+	// src.Values = stringsToBytesArray(src.RowValues)
+
+	// epoch := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	// // Given date
+	// givenDate := time.Date(2021, 7, 14, 0, 0, 0, 0, time.UTC)
+
+	// Calculate the difference in days
+	// difference := givenDate.Sub(epoch).Hours() / 24
+
+	// Prepare a byte slice to hold the binary representation
+	// buf := make([]byte, 4)
+	// binary.BigEndian.PutUint32(buf, uint32(difference))
+
+	// // Output the difference in days and the binary representation
+	// fmt.Printf("Days difference: %d\n", int(difference))
+	// fmt.Printf("Binary representation: %v\n", buf)
+	if src.RowValues != nil && len(src.RowValues) > 0 {
+		// fmt.Println("SRC ROW VALUES *** * ** * * ** ", src.RowValues)
+		src.Values = stringsToBytesArray(src.RowValues)
+	}
+	// fmt.Println("SRC VALUES", src.Values)
 	dst = pgio.AppendUint16(dst, uint16(len(src.Values)))
 	for _, v := range src.Values {
-		if v == nil {
+		if v == nil || len(v) == 0{
 			dst = pgio.AppendInt32(dst, -1)
 			continue
 		}
-
+		
+		
 		dst = pgio.AppendInt32(dst, int32(len(v)))
 		dst = append(dst, v...)
 	}
 
 	pgio.SetInt32(dst[sp:], int32(len(dst[sp:])))
 
+	// src.RowValues = []string{}
+	// src.Values = [][]byte{}
 	return dst
 }
 
@@ -105,15 +135,39 @@ func stringsToBytesArray(strArray []string) [][]byte {
 	byteArray := make([][]byte, len(strArray))
 
 	for i, str := range strArray {
-		// if str[0] == 'b' && str[1] == 'a' && str[2] == 's' && str[3] == 'e' {
-		// 	// slic and decode
-		// 	byteArray[i], _ = base64.StdEncoding.DecodeString(str[7:])
-		// 	continue
-		// }
-		byteArray[i] = []byte(str)
+		if str == "NIL" {
+			fmt.Println("NIL AHHAHAHAHAHHAHAHAHAH")
+			byteArray[i] = []byte{255, 255, 255, 255}
+			continue
+		}
+		byt, isValidBase64 := isValidBase64(str)
+		if isValidBase64 && byt != nil {
+			byteArray[i] = byt
+		} else if IsAsciiPrintable(str) {
+			byteArray[i] = []byte(str)
+		}
 	}
 
 	return byteArray
+}
+
+func isValidBase64(s string) ([]byte, bool) {
+	// check if it contains b64:
+	// then slice the string and decode
+	if len(s) < 5 {
+		return nil, false
+	}
+	if s[:4] != "b64:" {
+		return nil, false
+	}
+	s = s[4:]
+
+	val, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		return nil, false
+	}
+	fmt.Println("VALUEEEEE", val, "HURRAY", s)
+	return val, true
 }
 
 // checks if s is ascii and printable, aka doesn't include tab, backspace, etc.
