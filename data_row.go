@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"unicode"
 
 	"github.com/jackc/pgio"
@@ -136,7 +135,7 @@ func stringsToBytesArray(strArray []string) [][]byte {
 
 	for i, str := range strArray {
 		if str == "NIL" {
-			fmt.Println("NIL AHHAHAHAHAHHAHAHAHAH")
+	
 			byteArray[i] = []byte{255, 255, 255, 255}
 			continue
 		}
@@ -166,7 +165,7 @@ func isValidBase64(s string) ([]byte, bool) {
 	if err != nil {
 		return nil, false
 	}
-	fmt.Println("VALUEEEEE", val, "HURRAY", s)
+	
 	return val, true
 }
 
