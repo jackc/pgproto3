@@ -8,7 +8,7 @@ import (
 )
 
 type CommandComplete struct {
-	CommandTag     []byte `json:"-" yaml:"-"`
+	CommandTag     []byte `json:"command_tag" yaml:"command_tag,omitempty,flow"`
 	CommandTagType string `json:"command_tag_type" yaml:"command_tag_type"`
 }
 
@@ -26,7 +26,8 @@ func (dst *CommandComplete) Decode(src []byte) error {
 
 	dst.CommandTag = src[:idx]
 	dst.CommandTagType = string(dst.CommandTag)
-
+	// empty the buffer
+	dst.CommandTag = []byte{}
 	return nil
 }
 
@@ -36,7 +37,10 @@ func (src *CommandComplete) Encode(dst []byte) []byte {
 	dst = append(dst, 'C')
 	sp := len(dst)
 	dst = pgio.AppendInt32(dst, -1)
-	src.CommandTag = []byte(src.CommandTagType)
+
+	if len(src.CommandTag) == 0 {
+		src.CommandTag = []byte(src.CommandTagType)
+	}
 	dst = append(dst, src.CommandTag...)
 	dst = append(dst, 0)
 
