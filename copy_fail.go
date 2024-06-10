@@ -3,6 +3,7 @@ package pgproto3
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 
 	"github.com/jackc/pgio"
 )
@@ -24,7 +25,7 @@ func (dst *CopyFail) Decode(src []byte) error {
 	}
 
 	dst.Message = string(src[:idx])
-
+	fmt.Println("Error message of CopyFail.Decode: ", dst.Message)
 	return nil
 }
 
